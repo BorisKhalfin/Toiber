@@ -19,4 +19,4 @@ with col_info:
     """)
 
 with col_map:
-    st.info("📍 Map location and detailed directions will be rendered here.")
+    st.image("assets/Map.png" , caption="Our lab")
