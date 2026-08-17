@@ -8,4 +8,3 @@ st.write("Moments from lab life, conferences, team lunches, and events.")
 st.divider()
 
 st.info("📌 Photos and galleries (food, events, conferences) will be uploaded here soon.")
-pages/3_📚_Publications.py
