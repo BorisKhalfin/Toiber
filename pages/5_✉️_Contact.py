@@ -23,4 +23,4 @@ with col_info:
     """)
 
 with col_map:
-    st.image("assets/Map.png" , caption="Our lab")
+    st.image("assets/Map.png" , caption="📌 Our lab")
