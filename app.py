@@ -27,7 +27,7 @@ with col_about:
     st.info("💡 Use the sidebar navigation on the left to explore our Team, Gallery, Publications, Events, and Extras!")
 
 with col_img:
-    st.image("https://placehold.co/400x300/003366/FFFFFF?text=Toiber+Lab+Logo", caption="Toiber Lab @ BGU")
+    st.image("assets/DTree.png", caption="Toiber Lab @ BGU")
 
 st.divider()
 
