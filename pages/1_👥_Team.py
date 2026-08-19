@@ -51,7 +51,7 @@ team_members = [
     {
         "name": "Dr. Boris Khalfin",
         "role": "Researcher",
-        "page": "pages/Team/Dr. Boris Khalfin.py",
+        "link": "https://orcid.org/0000-0003-1695-6544",
         "bio": ""
     },
     {
@@ -118,9 +118,6 @@ for row_start in range(0, len(team_members), num_columns):
                     # Display optional external profile button
                     if member.get("link"):
                         st.link_button("🔗 Personal Page", member["link"], use_container_width=True)
-                       
-                    # Display optional internal Streamlit page
-                    if member.get("page"):
-                        st.page_link(member["page"], label="📄 Personal Page", use_container_width=True)
+                    
 
             
