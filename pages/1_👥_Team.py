@@ -27,13 +27,6 @@ def find_avatar_image(dir_path: Path, index: int):
             return img_path
     return None
 
-# For external links (ORCID, PubMed, Google Scholar):
-if member.get("link"):
-    st.link_button("🔗 Personal Page", member["link"], use_container_width=True)
-
-# For internal linsk (pages/Team/...):
-if member.get("page"):
-    st.page_link(member["page"], label="📄 Personal Page", use_container_width=True)
 
 # Team members data with optional "link" and "bio" fields
 team_members = [
@@ -122,6 +115,12 @@ for row_start in range(0, len(team_members), num_columns):
                     if member.get("bio"):
                         st.write(member["bio"])
 
-                    # Display optional profile button
+                    # Display optional external profile button
                     if member.get("link"):
                         st.link_button("🔗 Personal Page", member["link"], use_container_width=True)
+                       
+                    # Display optional internal Streamlit page
+                    if member.get("page"):
+                        st.page_link(member["page"], label="📄 Personal Page", use_container_width=True)
+
+            
