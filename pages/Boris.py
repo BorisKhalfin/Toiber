@@ -16,8 +16,8 @@ ORCID_ID = "0000-0003-1695-6544"
 AUTHOR_NAME = "Dr. Boris Khalfin"
 
 st.title("📚 Publications")
-st.write("Our published research on SIRT6, DNA repair, chromatin architecture, and longevity.")
-st.caption(f"Principal Investigator: **{AUTHOR_NAME}** | ORCID: [{ORCID_ID}](https://orcid.org/{ORCID_ID})")
+st.write("")
+st.caption(f"Researcher: **{AUTHOR_NAME}** | ORCID: [{ORCID_ID}](https://orcid.org/{ORCID_ID})")
 
 st.divider()
 
@@ -74,7 +74,7 @@ def fetch_pubmed_publications(orcid_id: str, author_query: str):
                     elif initials is not None and initials.text:
                         name_str = f"{last_name.text} {initials.text}"
                     
-                    if "toiber" in name_str.lower():
+                    if "khalfin" in name_str.lower():
                         name_str = f"**{name_str}**"
                     
                     authors.append(name_str)
@@ -113,7 +113,7 @@ def fetch_pubmed_publications(orcid_id: str, author_query: str):
 
 # Fetch publications
 with st.spinner("Fetching latest publications from PubMed..."):
-    pubs = fetch_pubmed_publications(ORCID_ID, "Toiber D")
+    pubs = fetch_pubmed_publications(ORCID_ID, "Khalfin B")
 
 if not pubs:
     st.warning("No publications found or unable to connect to PubMed at this moment.")
