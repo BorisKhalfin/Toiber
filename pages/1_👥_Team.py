@@ -44,14 +44,14 @@ team_members = [
     },
     {
         "name": "Dr. Ekaterina Eremenko",
-        "role": "Research associate",
+        "role": "Researcher",
         "link": "",
         "bio": ""
     },
     {
         "name": "Dr. Boris Khalfin",
         "role": "Researcher",
-        "link": "https://orcid.org/0000-0003-1695-6544",
+        "link": "https://pubmed.ncbi.nlm.nih.gov/?term=Khalfin+Boris&sort=date",
         "bio": ""
     },
     {
