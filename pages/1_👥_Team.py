@@ -27,6 +27,14 @@ def find_avatar_image(dir_path: Path, index: int):
             return img_path
     return None
 
+# For external links (ORCID, PubMed, Google Scholar):
+if member.get("link"):
+    st.link_button("🔗 Personal Page", member["link"], use_container_width=True)
+
+# For internal linsk (pages/Team/...):
+if member.get("page"):
+    st.page_link(member["page"], label="📄 Personal Page", use_container_width=True)
+
 # Team members data with optional "link" and "bio" fields
 team_members = [
     {
@@ -50,7 +58,7 @@ team_members = [
     {
         "name": "Dr. Boris Khalfin",
         "role": "Researcher",
-        "link": "https://orcid.org/0000-0003-1695-6544",
+        "page": "pages/Team/Dr. Boris Khalfin.py",
         "bio": ""
     },
     {
