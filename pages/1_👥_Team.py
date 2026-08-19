@@ -27,28 +27,58 @@ def find_avatar_image(dir_path: Path, index: int):
             return img_path
     return None
 
-# Placeholder team members data (20 blocks)
+# Team members data with optional "link" and "bio" fields
 team_members = [
-    {"name": "Dr. Debra Toiber", "role": "Principal Investigator"},
-    {"name": "Dr. Shai Kaluski-Kopatch", "role": "Lab manager"},
-    {"name": "Dr. Ekaterina Eremenko", "role": "Research associate"},
-    {"name": "Dr. Boris Khalfin", "role": "Researcher"},
-    {"name": "Dr. Daniel Stein", "role": "Postdoctoral fellow"},
-    {"name": "Daniela Eisurovich", "role": "Ph.D. Student"},
-    {"name": "Team Member 7", "role": "Lab Manager"},
-    {"name": "Team Member 8", "role": "Research Assistant"},
-    {"name": "Team Member 9", "role": "Graduate Student"},
-    {"name": "Team Member 10", "role": "Graduate Student"},
-    {"name": "Team Member 11", "role": "Undergraduate Student"},
-    {"name": "Team Member 12", "role": "Undergraduate Student"},
-    {"name": "Team Member 13", "role": "Visiting Scholar"},
-    {"name": "Team Member 14", "role": "Bioinformatician"},
-    {"name": "Team Member 15", "role": "Research Technician"},
-    {"name": "Team Member 16", "role": "Alumni / Collaborator"},
-    {"name": "Team Member 17", "role": "Student Researcher"},
-    {"name": "Team Member 18", "role": "Student Researcher"},
-    {"name": "Team Member 19", "role": "Lab Assistant"},
-    {"name": "Team Member 20", "role": "Lab Assistant"},
+    {
+        "name": "Dr. Debra Toiber",
+        "role": "Principal Investigator",
+        "link": "https://orcid.org/0000-0002-1465-0130",
+        "bio": ""
+    },
+    {
+        "name": "Dr. Shai Kaluski-Kopatch",
+        "role": "Lab manager",
+        "link": "",
+        "bio": ""
+    },
+    {
+        "name": "Dr. Ekaterina Eremenko",
+        "role": "Research associate",
+        "link": "",
+        "bio": ""
+    },
+    {
+        "name": "Dr. Boris Khalfin",
+        "role": "Researcher",
+        "link": "https://orcid.org/0000-0003-1695-6544",
+        "bio": ""
+    },
+    {
+        "name": "Dr. Daniel Stein",
+        "role": "Postdoctoral fellow",
+        "link": "",
+        "bio": ""
+    },
+    {
+        "name": "Daniela Eisurovich",
+        "role": "Ph.D. Student",
+        "link": "",
+        "bio": ""
+    },
+    {"name": "Team Member 7", "role": "Lab Manager", "link": "", "bio": ""},
+    {"name": "Team Member 8", "role": "Research Assistant", "link": "", "bio": ""},
+    {"name": "Team Member 9", "role": "Graduate Student", "link": "", "bio": ""},
+    {"name": "Team Member 10", "role": "Graduate Student", "link": "", "bio": ""},
+    {"name": "Team Member 11", "role": "Undergraduate Student", "link": "", "bio": ""},
+    {"name": "Team Member 12", "role": "Undergraduate Student", "link": "", "bio": ""},
+    {"name": "Team Member 13", "role": "Visiting Scholar", "link": "", "bio": ""},
+    {"name": "Team Member 14", "role": "Bioinformatician", "link": "", "bio": ""},
+    {"name": "Team Member 15", "role": "Research Technician", "link": "", "bio": ""},
+    {"name": "Team Member 16", "role": "Alumni / Collaborator", "link": "", "bio": ""},
+    {"name": "Team Member 17", "role": "Student Researcher", "link": "", "bio": ""},
+    {"name": "Team Member 18", "role": "Student Researcher", "link": "", "bio": ""},
+    {"name": "Team Member 19", "role": "Lab Assistant", "link": "", "bio": ""},
+    {"name": "Team Member 20", "role": "Lab Assistant", "link": "", "bio": ""},
 ]
 
 # Display team grid (4 cards per row)
@@ -79,3 +109,11 @@ for row_start in range(0, len(team_members), num_columns):
 
                     st.markdown(f"**{member['name']}**")
                     st.caption(member['role'])
+
+                    # Display optional biography
+                    if member.get("bio"):
+                        st.write(member["bio"])
+
+                    # Display optional profile button
+                    if member.get("link"):
+                        st.link_button("🔗 Personal Page", member["link"], use_container_width=True)
