@@ -4,49 +4,91 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from st_gsheets_connection import GsheetsConnection
+import gspread
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="Lab Meeting Scheduler", page_icon="📅", layout="wide")
 
-# --- GOOGLE SHEETS CONNECTION ---
+# --- GOOGLE SHEETS AUTHENTICATION & CONNECTION ---
 SPREADSHEET_URL = (
     "https://docs.google.com/spreadsheets/d/1qc_35xuLtks34Pn1_DmBW43V3Tex-_d3w__1yQivAzY/edit?usp=sharing"
 )
 
-conn = st.connection("gsheets", type=GsheetsConnection)
+@st.cache_resource
+def get_gsheet_client():
+    """Initializes the gspread client using Streamlit secrets or service account."""
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    
+    # Check if Google credentials exist in st.secrets
+    if "gcp_service_account" in st.secrets:
+        creds = Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"], scopes=scopes
+        )
+        return gspread.authorize(creds)
+    elif "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        creds = Credentials.from_service_account_info(
+            st.secrets["connections"]["gsheets"], scopes=scopes
+        )
+        return gspread.authorize(creds)
+    else:
+        # Anonymous fallback for public sheets (read-only / limited access)
+        return gspread.public_authorize()
+
+
+def get_worksheet(sheet_name="responses"):
+    """Fetches a specific worksheet from the spreadsheet."""
+    client = get_gsheet_client()
+    sheet = client.open_by_url(SPREADSHEET_URL)
+    try:
+        return sheet.worksheet(sheet_name)
+    except gspread.WorksheetNotFound:
+        # Create worksheet if it doesn't exist yet
+        ws = sheet.add_worksheet(title=sheet_name, rows=100, cols=10)
+        ws.append_row(["poll_id", "user_name", "availability", "updated_at"])
+        return ws
 
 
 def load_responses(poll_id="lab_demo"):
     """Fetches all responses for a given poll_id from Google Sheets."""
     try:
-        df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="responses", ttl="0s")
-        if df.empty:
+        ws = get_worksheet("responses")
+        records = ws.get_all_records()
+        if not records:
             return {}
 
-        # Filter rows matching the active poll_id
+        df = pd.DataFrame(records)
+        if df.empty or "poll_id" not in df.columns:
+            return {}
+
         poll_df = df[df["poll_id"] == poll_id]
 
         responses = {}
         for _, row in poll_df.iterrows():
             responses[row["user_name"]] = json.loads(str(row["availability"]))
         return responses
-    except Exception:
-        # Return empty dictionary if worksheet is uninitialized or empty
+    except Exception as e:
+        st.warning(f"Could not load data: {e}")
         return {}
 
 
 def save_response(poll_id, user_name, matrix):
     """Saves or updates a participant's availability matrix in Google Sheets."""
-    try:
-        df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="responses", ttl="0s")
-    except Exception:
-        df = pd.DataFrame(columns=["poll_id", "user_name", "availability", "updated_at"])
-
+    ws = get_worksheet("responses")
+    records = ws.get_all_records()
+    
     matrix_json = json.dumps(matrix)
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    df = pd.DataFrame(records) if records else pd.DataFrame(columns=["poll_id", "user_name", "availability", "updated_at"])
+
     # Check for an existing record by the same participant
-    mask = (df["poll_id"] == poll_id) & (df["user_name"] == user_name)
+    if not df.empty and "poll_id" in df.columns and "user_name" in df.columns:
+        mask = (df["poll_id"] == poll_id) & (df["user_name"] == user_name)
+    else:
+        mask = pd.Series([False])
 
     if mask.any():
         df.loc[mask, "availability"] = matrix_json
@@ -64,8 +106,9 @@ def save_response(poll_id, user_name, matrix):
         )
         df = pd.concat([df, new_row], ignore_index=True)
 
-    # Write updated DataFrame back to Google Sheets
-    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="responses", data=df)
+    # Overwrite worksheet with updated content
+    ws.clear()
+    ws.update([df.columns.values.tolist()] + df.values.tolist())
 
 
 # --- UI LAYOUT ---
