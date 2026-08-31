@@ -5,3 +5,5 @@ biopython>=1.80
 Pillow>=10.0.0
 plotly>=5.18.0
 st-gsheets-connection
+gspread
+google-auth
