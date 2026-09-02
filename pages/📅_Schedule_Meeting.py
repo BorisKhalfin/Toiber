@@ -16,26 +16,31 @@ SPREADSHEET_URL = (
 
 @st.cache_resource
 def get_gsheet_client():
-    """Initializes the gspread client using Streamlit secrets or service account."""
+    """Initializes the gspread client using Streamlit secrets."""
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
     
-    # Check if Google credentials exist in st.secrets
+    # 1. Check for standard gcp_service_account in secrets
     if "gcp_service_account" in st.secrets:
         creds = Credentials.from_service_account_info(
             st.secrets["gcp_service_account"], scopes=scopes
         )
         return gspread.authorize(creds)
+        
+    # 2. Check for Streamlit connections.gsheets secrets format
     elif "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
         creds = Credentials.from_service_account_info(
             st.secrets["connections"]["gsheets"], scopes=scopes
         )
         return gspread.authorize(creds)
+        
     else:
-        # Anonymous fallback for public sheets (read-only / limited access)
-        return gspread.public_authorize()
+        raise ValueError(
+            "No Service Account credentials found in st.secrets! "
+            "Please add [gcp_service_account] to your Streamlit Cloud secrets."
+        )
 
 
 def get_worksheet(sheet_name="responses"):
