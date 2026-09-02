@@ -1,6 +1,5 @@
 import streamlit as st
 from chempy import Substance
-from chempy.util.parsing import parsing_err_msg
 
 # Formula: Name
 PRESET_REAGENTS = {
