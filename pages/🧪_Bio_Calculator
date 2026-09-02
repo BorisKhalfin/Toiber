@@ -1,0 +1,200 @@
+import streamlit as st
+
+# COMMON_REAGENTS MW
+COMMON_REAGENTS = {
+    "Custom (ввести вручную)": None,
+    "Tris base": 121.14,
+    "Tris-HCl": 157.60,
+    "NaCl": 58.44,
+    "EDTA (disodium dihydrate)": 372.24,
+    "SDS": 288.38,
+    "KCl": 74.55,
+    "MgCl2 (hexahydrate)": 203.30,
+    "DTT": 154.25,
+    "Glucose": 180.16,
+    "Glycine": 75.07,
+    "BSA": 66463.00,
+}
+
+def render_molarity_calculator():
+    st.header("🧪 Advanced Molarity & Solution Calculator")
+    st.caption("Calculate mass, concentration, volume, or molecular weight with purity corrections.")
+
+    tab1, tab2 = st.tabs(["Mass & Molarity (Mass ↔ M)", "Dilution Calculator (C₁V₁ = C₂V₂)"])
+
+    # ---------------------------------------------------------
+    # TAB 1: MASS & MOLARITY
+    # ---------------------------------------------------------
+    with tab1:
+        st.subheader("Solution Preparation")
+        
+        col_reagent, col_purity = st.columns([2, 1])
+        with col_reagent:
+            selected_reagent = st.selectbox("Select Reagent", list(COMMON_REAGENTS.keys()))
+        with col_purity:
+            purity = st.number_input("Purity / Assay (%)", min_value=0.1, max_value=100.0, value=100.0, step=0.5)
+
+        # Выбор того, что нужно рассчитать
+        target = st.radio(
+            "What do you want to calculate?",
+            ["Mass required (m)", "Volume needed (V)", "Molarity (C)", "Molecular Weight (MW)"],
+            horizontal=True
+        )
+
+        st.divider()
+
+        # Поля ввода
+        col1, col2, col3, col4 = st.columns(4)
+
+        # Molecular Weight input
+        default_mw = COMMON_REAGENTS[selected_reagent] if selected_reagent != "Custom (ввести вручную)" else 58.44
+        with col1:
+            mw = st.number_input(
+                "MW (g/mol)", 
+                value=float(default_mw) if default_mw else 100.0, 
+                disabled=(target == "Molecular Weight (MW)"),
+                min_value=0.0001,
+                format="%.2f"
+            )
+
+        # Mass input
+        with col2:
+            if target == "Mass required (m)":
+                st.text_input("Mass (m)", value="Calculating...", disabled=True)
+                mass_val = 0.0
+            else:
+                mass_val = st.number_input("Mass", value=1.0, min_value=0.000001, format="%.4f")
+                mass_unit = st.selectbox("Mass Unit", ["g", "mg", "µg"], key="m_unit")
+
+        # Concentration input
+        with col3:
+            if target == "Molarity (C)":
+                st.text_input("Concentration (C)", value="Calculating...", disabled=True)
+                conc_val = 0.0
+            else:
+                conc_val = st.number_input("Concentration", value=1.0, min_value=0.000001, format="%.4f")
+                conc_unit = st.selectbox("Conc. Unit", ["M", "mM", "µM", "nM"], key="c_unit")
+
+        # Volume input
+        with col4:
+            if target == "Volume needed (V)":
+                st.text_input("Volume (V)", value="Calculating...", disabled=True)
+                vol_val = 0.0
+            else:
+                vol_val = st.number_input("Volume", value=100.0, min_value=0.000001, format="%.4f")
+                vol_unit = st.selectbox("Vol. Unit", ["L", "mL", "µL"], key="v_unit")
+
+        # --- Приведение к СИ (г, моль/Л, Л) ---
+        purity_factor = purity / 100.0
+
+        if target != "Mass required (m)":
+            m_g = mass_val * {"g": 1.0, "mg": 1e-3, "µg": 1e-6}[mass_unit]
+        if target != "Molarity (C)":
+            c_m = conc_val * {"M": 1.0, "mM": 1e-3, "µM": 1e-6, "nM": 1e-9}[conc_unit]
+        if target != "Volume needed (V)":
+            v_l = vol_val * {"L": 1.0, "mL": 1e-3, "µL": 1e-6}[vol_unit]
+
+        # --- Расчёты ---
+        st.divider()
+        st.markdown("### 📊 Result")
+
+        if target == "Mass required (m)":
+            # m = C * V * MW / purity
+            mass_required_g = (c_m * v_l * mw) / purity_factor
+            
+            # Авто-форматирование результата (г, мг, мкг)
+            if mass_required_g >= 1.0:
+                res_str = f"{mass_required_g:.4f} g"
+            elif mass_required_g >= 1e-3:
+                res_str = f"{mass_required_g * 1e3:.3f} mg"
+            else:
+                res_str = f"{mass_required_g * 1e6:.2f} µg"
+
+            st.metric(label="Required Mass", value=res_str)
+            
+            protocol_text = (
+                f"Weigh **{res_str}** of {selected_reagent if selected_reagent != 'Custom (ввести вручную)' else 'compound'} "
+                f"(MW: {mw} g/mol, Purity: {purity}%) and dissolve in solvent to a final volume of **{vol_val} {vol_unit}** "
+                f"to yield a **{conc_val} {conc_unit}** solution."
+            )
+            st.info(f"**Recipe Note:**\n{protocol_text}")
+
+        elif target == "Volume needed (V)":
+            # V = m / (C * MW) * purity
+            vol_l = (m_g * purity_factor) / (c_m * mw)
+            
+            if vol_l >= 1.0:
+                res_str = f"{vol_l:.4f} L"
+            elif vol_l >= 1e-3:
+                res_str = f"{vol_l * 1e3:.3f} mL"
+            else:
+                res_str = f"{vol_l * 1e6:.2f} µL"
+
+            st.metric(label="Required Volume", value=res_str)
+
+        elif target == "Molarity (C)":
+            # C = (m * purity) / (MW * V)
+            c_calc_m = (m_g * purity_factor) / (mw * v_l)
+            
+            if c_calc_m >= 1.0:
+                res_str = f"{c_calc_m:.4f} M"
+            elif c_calc_m >= 1e-3:
+                res_str = f"{c_calc_m * 1e3:.3f} mM"
+            elif c_calc_m >= 1e-6:
+                res_str = f"{c_calc_m * 1e6:.2f} µM"
+            else:
+                res_str = f"{c_calc_m * 1e9:.2f} nM"
+
+            st.metric(label="Resulting Concentration", value=res_str)
+
+        elif target == "Molecular Weight (MW)":
+            # MW = (m * purity) / (C * V)
+            mw_calc = (m_g * purity_factor) / (c_m * v_l)
+            st.metric(label="Calculated MW", value=f"{mw_calc:.2f} g/mol")
+
+    # ---------------------------------------------------------
+    # TAB 2: DILUTION CALCULATOR
+    # ---------------------------------------------------------
+    with tab2:
+        st.subheader("Dilution Calculator (C₁V₁ = C₂V₂)")
+        
+        col_c1, col_v1 = st.columns(2)
+        with col_c1:
+            c1 = st.number_input("Stock Concentration (C₁)", value=10.0, min_value=0.0)
+            c1_unit = st.selectbox("C₁ Unit", ["X", "M", "mM", "µM", "%"], key="c1_u")
+        with col_v1:
+            st.text_input("Stock Volume Needed (V₁)", value="Calculated below", disabled=True)
+
+        col_c2, col_v2 = st.columns(2)
+        with col_c2:
+            c2 = st.number_input("Desired Concentration (C₂)", value=1.0, min_value=0.0)
+            c2_unit = st.selectbox("C₂ Unit", ["X", "M", "mM", "µM", "%"], key="c2_u")
+        with col_v2:
+            v2 = st.number_input("Desired Final Volume (V₂)", value=100.0, min_value=0.0)
+            v2_unit = st.selectbox("V₂ Unit", ["mL", "L", "µL"], key="v2_u")
+
+        # Базовая проверка единиц
+        if c1_unit == c2_unit:
+            if c1 > 0 and c2 <= c1:
+                v1 = (c2 * v2) / c1
+                buffer_v = v2 - v1
+                
+                st.divider()
+                st.metric(label=f"Volume of Stock (V₁) needed", value=f"{v1:.3f} {v2_unit}")
+                
+                if buffer_v >= 0:
+                    st.success(
+                        f"**Instructions:** Combine **{v1:.3f} {v2_unit}** of Stock (C₁) "
+                        f"with **{buffer_v:.3f} {v2_unit}** of diluent/buffer to reach **{v2} {v2_unit}** total volume."
+                    )
+                else:
+                    st.error("Desired concentration C₂ cannot be higher than stock concentration C₁!")
+            else:
+                st.warning("Ensure C₁ is greater than C₂.")
+        else:
+            st.info("💡 Make sure C₁ and C₂ use the same concentration units for simple C₁V₁=C₂V₂ calculations.")
+
+
+if __name__ == "__main__":
+    st.set_page_config(page_title="Molarity Calculator", layout="wide")
+    render_molarity_calculator()
