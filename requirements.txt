@@ -4,6 +4,7 @@ requests>=2.31.0
 biopython>=1.80
 Pillow>=10.0.0
 plotly>=5.18.0
+chempy
 st-gsheets-connection
 gspread
 google-auth
